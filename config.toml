@@ -1,0 +1,5 @@
+[display.matrix]
+brightness = 80
+
+[display.sim]
+brightness = 255

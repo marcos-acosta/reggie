@@ -1,13 +1,12 @@
 import sys
-import time
 
 from PIL import Image, ImageSequence
 
-from matrix import Matrix
+from display import open_display
 
 
 def main():
-    matrix = Matrix()
+    display = open_display()
     img = Image.open(sys.argv[1])
 
     if getattr(img, "is_animated", False):
@@ -16,10 +15,11 @@ def main():
         ]
         while True:
             for frame, ms in frames:
-                matrix.show(frame)
-                time.sleep(ms / 1000)
+                display.show(frame)
+                display.sleep(ms / 1000)
     else:
-        matrix.show(img)
+        display.show(img)
+        display.hold()
 
 
 if __name__ == "__main__":
