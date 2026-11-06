@@ -1,6 +1,6 @@
 import importlib
+import time
 
-from PIL import Image
 from rich.console import Console
 
 from display import Display
@@ -17,11 +17,11 @@ def available_screens() -> list[str]:
     return sorted(fresh_import("screens").discover())
 
 
-def render_screen(name: str) -> Image.Image:
+def load_screen(name: str):
     registry = fresh_import("screens").discover()
     if name not in registry:
         raise KeyError(f"Unknown screen {name!r}; available: {', '.join(sorted(registry))}")
-    return importlib.import_module("ui").render(registry[name]())
+    return registry[name]
 
 
 class Session:
@@ -33,6 +33,8 @@ class Session:
         self.watcher = Watcher()
         self.keys = KeyReader()
         self.actions = {"r": self.reload, "w": self.toggle_watch, "s": self.switch}
+        self.current = None
+        self.rendered_at = 0.0
 
     def run(self) -> None:
         self.reload()
@@ -44,16 +46,31 @@ class Session:
                     action()
                 elif self.watch and self.watcher.changed():
                     self.reload()
+                elif self._refresh_due():
+                    self.render(quiet=True)
                 self.display.sleep(POLL_INTERVAL)
 
     def reload(self) -> None:
         self.watcher.sync()
         try:
-            self.display.show(render_screen(self.screen))
+            self.current = load_screen(self.screen)
         except Exception:
             self.console.print_exception(max_frames=4)
             return
-        self.console.print(f"[green]●[/] [bold]{self.screen}[/] [dim]{self._watch_label()}[/]")
+        if self.render():
+            self.console.print(f"[green]●[/] [bold]{self.screen}[/] [dim]{self._watch_label()}[/]")
+
+    def render(self, quiet: bool = False) -> bool:
+        self.rendered_at = time.monotonic()
+        try:
+            self.display.show(importlib.import_module("ui").render(self.current.build()))
+        except Exception as error:
+            if quiet:
+                self.console.print(f"[red]✗[/] {type(error).__name__}: {error}")
+            else:
+                self.console.print_exception(max_frames=4)
+            return False
+        return True
 
     def toggle_watch(self) -> None:
         self.watch = not self.watch
@@ -63,6 +80,10 @@ class Session:
         with self.keys.paused():
             self.screen = pick_screen(self.console, available_screens(), current=self.screen)
         self.reload()
+
+    def _refresh_due(self) -> bool:
+        refresh = self.current and self.current.refresh
+        return bool(refresh) and time.monotonic() - self.rendered_at >= refresh
 
     def _watch_label(self) -> str:
         return "watching for changes" if self.watch else "not watching (r to reload)"

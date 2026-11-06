@@ -3,6 +3,7 @@ from .flex import Column, Row, Spacer
 from .fonts import FONT_NAMES, load_font
 from .geometry import Insets, Rect, Size
 from .node import Node
+from .picture import Picture
 from .render import render
 from .text import Text
 
@@ -12,6 +13,7 @@ __all__ = [
     "Column",
     "Insets",
     "Node",
+    "Picture",
     "Rect",
     "Row",
     "Size",
