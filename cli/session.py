@@ -10,7 +10,7 @@ from .picker import pick_screen
 from .reloader import Watcher, fresh_import
 
 POLL_INTERVAL = 0.1
-HELP = "[cyan]r[/] reload  [cyan]w[/] toggle watch  [cyan]s[/] switch screen  [cyan]q[/] quit"
+HELP = "[cyan]r[/] reload  [cyan]w[/] toggle watch  [cyan]s[/] switch screen  [cyan]o[/] on/off  [cyan]q[/] quit"
 
 
 def available_screens() -> list[str]:
@@ -32,11 +32,12 @@ class Session:
         self.watch = watch
         self.watcher = Watcher()
         self.keys = KeyReader()
-        self.actions = {"r": self.reload, "w": self.toggle_watch, "s": self.switch}
+        self.actions = {"r": self.reload, "w": self.toggle_watch, "s": self.switch, "o": self.toggle_power}
         self.current = None
         self.rendered_at = 0.0
 
     def run(self) -> None:
+        self.display.on()
         self.reload()
         if self.keys.interactive:
             self.console.print(HELP)
@@ -71,6 +72,10 @@ class Session:
                 self.console.print_exception(max_frames=4)
             return False
         return True
+
+    def toggle_power(self) -> None:
+        self.display.toggle_power()
+        self.console.print("[green]●[/] on" if self.display.powered else "[dim]○ off[/]")
 
     def toggle_watch(self) -> None:
         self.watch = not self.watch

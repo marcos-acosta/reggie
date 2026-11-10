@@ -17,6 +17,7 @@ def fit(img: Image.Image) -> Image.Image:
 class Display(ABC):
     def __init__(self, brightness: int):
         self.level = brightness
+        self.powered = True
 
     def show(self, img: Image.Image) -> None:
         self.show_pixels(np.asarray(fit(img)))
@@ -35,13 +36,21 @@ class Display(ABC):
 
     def brightness(self, level: int) -> None:
         self.level = max(0, min(255, level))
-        self._apply_brightness(self.level)
+        self.on()
 
     def on(self) -> None:
+        self.powered = True
         self._apply_brightness(self.level)
 
     def off(self) -> None:
+        self.powered = False
         self._apply_brightness(0)
+
+    def toggle_power(self) -> None:
+        if self.powered:
+            self.off()
+        else:
+            self.on()
 
     def sleep(self, seconds: float) -> None:
         time.sleep(seconds)

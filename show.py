@@ -7,6 +7,7 @@ from display import open_display
 
 def main():
     display = open_display()
+    display.on()
     img = Image.open(sys.argv[1])
 
     if getattr(img, "is_animated", False):

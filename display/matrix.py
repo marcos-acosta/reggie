@@ -21,7 +21,6 @@ class Matrix(Display):
         super().__init__(brightness)
         self.addr = (socket.gethostbyname(host), PORT)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._apply_brightness(self.level)
 
     def _send(self, pixels: Pixels) -> None:
         packed = to_rgb565(pixels)
