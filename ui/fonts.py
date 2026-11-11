@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import BdfFontFile, ImageFont
 
 ASSETS = Path(__file__).parent / "assets"
-BDF_FONTS = {"tom-thumb": "tom-thumb.bdf", "5x7": "5x7.bdf"}
+BDF_FONTS = {"tom-thumb": "tom-thumb.bdf", "5x7": "5x7.bdf", "helvR12": "helvR12.bdf"}
 FONT_NAMES = tuple(BDF_FONTS)
 DEFAULT_FONT = "tom-thumb"
 

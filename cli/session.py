@@ -10,6 +10,7 @@ from .picker import pick_screen
 from .reloader import Watcher, fresh_import
 
 POLL_INTERVAL = 0.1
+RETRY_INTERVAL = 30
 HELP = "[cyan]r[/] reload  [cyan]w[/] toggle watch  [cyan]s[/] switch screen  [cyan]o[/] on/off  [cyan]q[/] quit"
 
 
@@ -34,7 +35,7 @@ class Session:
         self.keys = KeyReader()
         self.actions = {"r": self.reload, "w": self.toggle_watch, "s": self.switch, "o": self.toggle_power}
         self.current = None
-        self.rendered_at = 0.0
+        self.next_render_at: float | None = None
 
     def run(self) -> None:
         self.display.on()
@@ -62,7 +63,7 @@ class Session:
             self.console.print(f"[green]●[/] [bold]{self.screen}[/] [dim]{self._watch_label()}[/]")
 
     def render(self, quiet: bool = False) -> bool:
-        self.rendered_at = time.monotonic()
+        refresh = self.current.refresh
         try:
             self.display.show(importlib.import_module("ui").render(self.current.build()))
         except Exception as error:
@@ -70,8 +71,13 @@ class Session:
                 self.console.print(f"[red]✗[/] {type(error).__name__}: {error}")
             else:
                 self.console.print_exception(max_frames=4)
+            self._schedule_render(refresh and min(refresh, RETRY_INTERVAL))
             return False
+        self._schedule_render(refresh)
         return True
+
+    def _schedule_render(self, delay: float | None) -> None:
+        self.next_render_at = time.monotonic() + delay if delay else None
 
     def toggle_power(self) -> None:
         self.display.toggle_power()
@@ -87,8 +93,7 @@ class Session:
         self.reload()
 
     def _refresh_due(self) -> bool:
-        refresh = self.current and self.current.refresh
-        return bool(refresh) and time.monotonic() - self.rendered_at >= refresh
+        return self.next_render_at is not None and time.monotonic() >= self.next_render_at
 
     def _watch_label(self) -> str:
         return "watching for changes" if self.watch else "not watching (r to reload)"

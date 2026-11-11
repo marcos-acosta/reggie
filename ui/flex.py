@@ -6,6 +6,7 @@ from .geometry import Rect, Size
 from .node import Node
 
 Align = Literal["start", "center", "end", "stretch"]
+Justify = Literal["start", "center", "end"]
 
 
 class Spacer(Node):
@@ -25,10 +26,18 @@ class Spacer(Node):
 class _Flex(Node):
     horizontal: bool
 
-    def __init__(self, *children: Node, gap: int = 0, align: Align = "stretch", flex: int = 0):
+    def __init__(
+        self,
+        *children: Node,
+        gap: int = 0,
+        align: Align = "stretch",
+        justify: Justify = "start",
+        flex: int = 0,
+    ):
         self.children = children
         self.gap = gap
         self.align = align
+        self.justify = justify
         self.flex = flex
 
     def _main(self, size: Size) -> int:
@@ -56,10 +65,11 @@ class _Flex(Node):
 
     def draw(self, canvas: Image.Image, rect: Rect) -> None:
         sizes = [child.measure(rect.size) for child in self.children]
-        lengths = self._main_lengths(sizes, self._main(rect.size))
+        main_space = self._main(rect.size)
+        lengths = self._main_lengths(sizes, main_space)
         cross_space = self._cross(rect.size)
 
-        position = 0
+        position = self._justify_offset(main_space - sum(lengths) - self._total_gap())
         for child, size, length in zip(self.children, sizes, lengths):
             cross_len, cross_pos = self._cross_placement(self._cross(size), cross_space)
             child.draw(canvas, self._rect(rect, position, cross_pos, length, cross_len))
@@ -80,6 +90,10 @@ class _Flex(Node):
                 handed_out += length
             lengths.append(length)
         return lengths
+
+    def _justify_offset(self, leftover: int) -> int:
+        leftover = max(0, leftover)
+        return {"start": 0, "center": leftover // 2, "end": leftover}[self.justify]
 
     def _cross_placement(self, natural: int, space: int) -> tuple[int, int]:
         if self.align == "stretch":
