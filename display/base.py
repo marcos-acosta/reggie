@@ -17,7 +17,6 @@ def fit(img: Image.Image) -> Image.Image:
 class Display(ABC):
     def __init__(self, brightness: int):
         self.level = brightness
-        self.powered = True
 
     def show(self, img: Image.Image) -> None:
         self.show_pixels(np.asarray(fit(img)))
@@ -27,6 +26,9 @@ class Display(ABC):
         if pixels.shape != SHAPE or pixels.dtype != np.uint8:
             raise ValueError(f"Expected uint8 array of shape {SHAPE}, got {pixels.dtype} {pixels.shape}")
         self._send(pixels)
+
+    def clear(self) -> None:
+        self.show_pixels(np.zeros(SHAPE, dtype=np.uint8))
 
     @abstractmethod
     def _send(self, pixels: Pixels) -> None: ...
@@ -39,18 +41,10 @@ class Display(ABC):
         self.on()
 
     def on(self) -> None:
-        self.powered = True
         self._apply_brightness(self.level)
 
     def off(self) -> None:
-        self.powered = False
         self._apply_brightness(0)
-
-    def toggle_power(self) -> None:
-        if self.powered:
-            self.off()
-        else:
-            self.on()
 
     def sleep(self, seconds: float) -> None:
         time.sleep(seconds)
