@@ -3,7 +3,7 @@ from services import spotify
 from ui import Box, Node, Picture
 
 
-@screen("spotify", refresh=3)
+@screen("spotify", refresh=10)
 def album_cover() -> Node:
     playing = spotify.now_playing()
     if not playing or not playing.cover_url:
