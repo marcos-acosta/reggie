@@ -9,8 +9,8 @@ def weather_report() -> Column:
     return Column(
         Text(f"{weather_report.currentTempF}°", font="helvR12"),
         Row(
-            Text(f"{weather_report.minTempF}°", font="tom-thumb", color="blue"),
-            Text(f"{weather_report.maxTempF}°", font="tom-thumb", color="red"),
+            Text(f"{weather_report.minTempF}°", font="tom-thumb", color="#8080ff"),
+            Text(f"{weather_report.maxTempF}°", font="tom-thumb", color="#ff2020"),
             gap=2,
         ),
         gap=1,
