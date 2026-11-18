@@ -16,7 +16,7 @@ from .remote import RemoteListener
 
 POLL_INTERVAL = 0.1
 RETRY_INTERVAL = 30
-LABEL_SECONDS = 1.0
+LABEL_SECONDS = 2.0
 BRIGHTNESS_STEP = 25
 HELP = (
     "[cyan]1-9[/] screen  [cyan]n[/]/[cyan]p[/] next/prev  [cyan]s[/] pick  [cyan]r[/] reload  "
@@ -140,8 +140,13 @@ class Session:
             return
         ui = importlib.import_module("ui")
         node = self.content
-        if self.label_until:
-            label = ui.Box(ui.Text(self._label()), padding=1, background="black")
+        if self.label_until and (entry := self._entry()):
+            label = ui.Box(
+                ui.Row(ui.Text(str(entry.number), color="yellow"), ui.Text(entry.name), gap=3),
+                padding=1,
+                margin=2,
+                background="black",
+            )
             node = ui.Stack(node, ui.Column(ui.Row(label)))
         self.display.show(ui.render(node))
 
@@ -196,8 +201,11 @@ class Session:
         if not self.remote:
             self.console.print(f"[yellow]Port {self.remote_config.port} is busy; IR remote presses won't reach this one[/]")
 
+    def _entry(self):
+        return next((entry for entry in self.lineup.entries if entry.id == self.screen), None)
+
     def _label(self) -> str:
-        entry = next((entry for entry in self.lineup.entries if entry.id == self.screen), None)
+        entry = self._entry()
         return entry.label if entry else self.screen
 
     def _schedule_build(self, delay: float | None) -> None:
