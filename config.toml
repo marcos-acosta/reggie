@@ -3,3 +3,18 @@ brightness = 80
 
 [display.sim]
 brightness = 255
+
+# Button presses forwarded by the ESP32's IR receiver.
+# Presses from other remotes (different address) and unmapped buttons are logged with their codes.
+[remote]
+port = 7779
+address = 48896
+
+# NEC command code -> action. Actions: toggle, on, off, next, prev, reload, brightness_up, brightness_down
+[remote.buttons]
+1 = "toggle"            # play/pause
+2 = "brightness_up"     # vol+
+0 = "brightness_down"   # vol-
+10 = "next"             # right arrow
+8 = "prev"              # left arrow
+9 = "reload"            # enter
