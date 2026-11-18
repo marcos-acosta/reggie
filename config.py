@@ -12,6 +12,12 @@ class DisplayConfig:
 
 
 @dataclass(frozen=True)
+class ScreenConfig:
+    id: str
+    name: str
+
+
+@dataclass(frozen=True)
 class RemoteConfig:
     port: int
     address: int
@@ -26,6 +32,10 @@ def _load() -> dict:
 
 def display_config(kind: str) -> DisplayConfig:
     return DisplayConfig(**_load()["display"][kind])
+
+
+def screen_configs() -> list[ScreenConfig]:
+    return [ScreenConfig(**entry) for entry in _load().get("screens", [])]
 
 
 def remote_config() -> RemoteConfig:

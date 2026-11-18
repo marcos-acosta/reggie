@@ -4,11 +4,11 @@ from rich.console import Console
 
 from cli.control import send_command
 from cli.picker import pick_screen
-from cli.session import Session, available_screens
+from cli.session import Session, load_lineup
 from display import default_kind, open_display
 
 parser = argparse.ArgumentParser(description="Preview screens on the matrix or simulator.")
-parser.add_argument("screen", nargs="?", help="Screen to show; omit to pick from a list")
+parser.add_argument("screen", nargs="?", help="Screen number or name to show; omit to pick from a list")
 parser.add_argument("--sim", action="store_true", help="Use the on-screen simulator")
 parser.add_argument("--no-watch", dest="watch", action="store_false", help="Only reload when pressing r")
 power = parser.add_mutually_exclusive_group()
@@ -35,14 +35,14 @@ def main() -> None:
         set_power(console, args.power, kind)
         return
 
-    screens = available_screens()
-
-    if args.screen and args.screen not in screens:
-        parser.error(f"Unknown screen {args.screen!r}; available: {', '.join(screens)}")
-    screen = args.screen or pick_screen(console, screens)
+    lineup, _ = load_lineup()
+    entry = lineup.find(args.screen) if args.screen else pick_screen(console, lineup)
+    if not entry:
+        names = ", ".join(entry.label for entry in lineup.entries)
+        parser.error(f"Unknown screen {args.screen!r}; available: {names}")
 
     console.print(f"[dim]Opening {kind} display…[/]")
-    Session(open_display(kind), console, screen, watch=args.watch).run()
+    Session(open_display(kind), console, entry.id, watch=args.watch).run()
 
 
 if __name__ == "__main__":

@@ -10,7 +10,8 @@ brightness = 255
 port = 7779
 address = 48896
 
-# NEC command code -> action. Actions: toggle, on, off, next, prev, reload, brightness_up, brightness_down
+# NEC command code -> action.
+# Actions: toggle, on, off, next, prev, reload, brightness_up, brightness_down, "screen <number or name>"
 [remote.buttons]
 1 = "toggle"            # play/pause
 2 = "brightness_up"     # vol+
@@ -18,3 +19,31 @@ address = 48896
 10 = "next"             # right arrow
 8 = "prev"              # left arrow
 9 = "reload"            # enter
+16 = "screen 1"
+17 = "screen 2"
+18 = "screen 3"
+20 = "screen 4"
+21 = "screen 5"
+22 = "screen 6"
+24 = "screen 7"
+25 = "screen 8"
+26 = "screen 9"
+
+# Screen lineup: order sets the numbers (picker, number keys, remote 1-9).
+# `id` is the name registered with @screen in code; `name` is what's shown.
+# Registered screens not listed here are appended after these, named by their id.
+[[screens]]
+id = "spotify"
+name = "spotify"
+
+[[screens]]
+id = "weather_report"
+name = "weather"
+
+[[screens]]
+id = "demo"
+name = "demo"
+
+[[screens]]
+id = "fonts"
+name = "fonts"

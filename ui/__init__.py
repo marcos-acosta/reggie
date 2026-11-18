@@ -5,6 +5,7 @@ from .geometry import Insets, Rect, Size
 from .node import Node
 from .picture import Picture
 from .render import render
+from .stack import Stack
 from .text import Text
 
 __all__ = [
@@ -18,6 +19,7 @@ __all__ = [
     "Row",
     "Size",
     "Spacer",
+    "Stack",
     "Text",
     "load_font",
     "render",
