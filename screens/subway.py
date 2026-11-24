@@ -6,7 +6,7 @@ from services import subway, subway_map
 from ui import Node, Picture
 
 BACKGROUND = "black"
-TRACK = "#707070"
+TRACK = "#1A1A1A"
 BLUE, ORANGE, YELLOW, RED, GREEN = "#0062CF", "#EB6800", "#F6BC26", "#D82233", "#009952"
 # The MTA's gray (#7C858C) would disappear into the tracks.
 LIGHT_GRAY = "#E0E6EB"
@@ -30,7 +30,9 @@ def route_color(route: str) -> str:
 
 @screen("subway", refresh=10)
 def subway_screen() -> Node:
-    trains = [train for train in subway.fetch_trains() if train.route not in EXCLUDED_ROUTES]
+    trains = [
+        train for train in subway.fetch_trains() if train.route not in EXCLUDED_ROUTES
+    ]
     pixels = np.empty((*subway_map.TRACKS.shape, 3), dtype=np.uint8)
     pixels[:] = ImageColor.getrgb(BACKGROUND)
     pixels[subway_map.TRACKS] = ImageColor.getrgb(TRACK)
