@@ -5,7 +5,7 @@ from screens import screen
 from services import subway, subway_map
 from ui import Node, Picture
 
-BACKGROUND = "#181818"
+BACKGROUND = "black"
 TRACK = "#707070"
 BLUE, ORANGE, YELLOW, RED, GREEN = "#0062CF", "#EB6800", "#F6BC26", "#D82233", "#009952"
 # The MTA's gray (#7C858C) would disappear into the tracks.
