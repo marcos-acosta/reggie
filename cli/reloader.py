@@ -5,13 +5,15 @@ from types import ModuleType
 
 ROOT = Path(__file__).resolve().parent.parent
 RELOADABLE_PACKAGES = ("ui", "screens")
+WATCHED_SUFFIXES = {".py", ".png"}
 
 
 def _snapshot() -> dict[Path, float]:
     return {
         path: path.stat().st_mtime
         for package in RELOADABLE_PACKAGES
-        for path in (ROOT / package).rglob("*.py")
+        for path in (ROOT / package).rglob("*")
+        if path.suffix in WATCHED_SUFFIXES
     }
 
 

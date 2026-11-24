@@ -43,7 +43,3 @@ name = "weather"
 [[screens]]
 id = "demo"
 name = "demo"
-
-[[screens]]
-id = "fonts"
-name = "fonts"
