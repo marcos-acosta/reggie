@@ -5,7 +5,7 @@ from collections.abc import Callable
 from rich.console import Console
 
 from config import remote_config
-from display import Display
+from display import Display, DisplayUnreachable
 
 from .control import ControlServer
 from .keys import KeyReader
@@ -16,6 +16,7 @@ from .remote import RemoteListener
 
 POLL_INTERVAL = 0.1
 RETRY_INTERVAL = 30
+RECONNECT_INTERVAL = 5
 LABEL_SECONDS = 2.0
 BRIGHTNESS_STEP = 25
 HELP = (
@@ -54,6 +55,7 @@ class Session:
         self.content = None
         self.label_until: float | None = None
         self.next_build_at: float | None = None
+        self.reconnect_at: float | None = None
         self.key_actions = {"w": self.toggle_watch, "s": self.pick}
         self.commands: dict[str, Callable[[], str]] = {
             "on": self.power_on,
@@ -67,7 +69,7 @@ class Session:
         }
 
     def run(self) -> None:
-        self.display.on()
+        self.transmit(self.display.on)
         self.show_screen(self.screen)
         self._print_startup_notes()
         with self.keys:
@@ -80,6 +82,8 @@ class Session:
                 self._handle_remote()
                 if self.watch and self.watcher.changed():
                     self.reload()
+                elif self._due(self.reconnect_at):
+                    self.reconnect()
                 elif self._due(self.next_build_at):
                     self.build(quiet=True)
                 elif self._due(self.label_until):
@@ -148,12 +152,36 @@ class Session:
                 background="black",
             )
             node = ui.Stack(node, ui.Column(ui.Row(label)))
-        self.display.show(ui.render(node))
+        image = ui.render(node)
+        self.transmit(lambda: self.display.show(image))
+
+    def transmit(self, send: Callable[[], None]) -> bool:
+        try:
+            send()
+        except DisplayUnreachable as error:
+            if self.reconnect_at is None:
+                self.console.print(f"[yellow]Display unreachable, retrying: {error}[/]")
+            self.reconnect_at = self.reconnect_at or time.monotonic() + RECONNECT_INTERVAL
+            return False
+        return True
+
+    def reconnect(self) -> None:
+        """Re-sends everything, since any of it may have been missed while unreachable."""
+        self.reconnect_at = time.monotonic() + RECONNECT_INTERVAL
+        if not self.transmit(self.display.on):
+            return
+        self.reconnect_at = None
+        if self.powered:
+            self.draw()
+        else:
+            self.transmit(self.display.clear)
+        if self.reconnect_at is None:
+            self.console.print("[green]Display reconnected[/]")
 
     def power_off(self) -> str:
         self.powered = False
         self.next_build_at = self.label_until = None
-        self.display.clear()
+        self.transmit(self.display.clear)
         self.console.print("[dim]○ off[/]")
         return "off"
 
@@ -164,7 +192,7 @@ class Session:
         return self.power_off() if self.powered else self.power_on()
 
     def adjust_brightness(self, step: int) -> str:
-        self.display.brightness(self.display.level + step)
+        self.transmit(lambda: self.display.brightness(self.display.level + step))
         return f"brightness {self.display.level}"
 
     def toggle_watch(self) -> None:
@@ -180,7 +208,10 @@ class Session:
         if not self.control or not (message := self.control.poll()):
             return
         command, sender = message
-        self.control.reply(sender, self.run_command(command))
+        reply = self.run_command(command)
+        if self.reconnect_at is not None:
+            reply += " (display unreachable, retrying)"
+        self.control.reply(sender, reply)
 
     def _handle_remote(self) -> None:
         if not self.remote or not (press := self.remote.poll()):

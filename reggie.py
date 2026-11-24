@@ -5,7 +5,7 @@ from rich.console import Console
 from cli.control import send_command
 from cli.picker import pick_screen
 from cli.session import Session, load_lineup
-from display import default_kind, open_display
+from display import DisplayUnreachable, default_kind, open_display
 
 parser = argparse.ArgumentParser(description="Preview screens on the matrix or simulator.")
 parser.add_argument("screen", nargs="?", help="Screen number or name to show; omit to pick from a list")
@@ -20,8 +20,11 @@ def set_power(console: Console, command: str, kind: str) -> None:
     if reply := send_command(command):
         console.print(f"[dim]Session: {reply}[/]")
     elif command == "off":
-        open_display(kind).clear()
-        console.print("[dim]No running session; cleared the display[/]")
+        try:
+            open_display(kind).clear()
+            console.print("[dim]No running session; cleared the display[/]")
+        except DisplayUnreachable as error:
+            console.print(f"[red]No running session, and the display is unreachable: {error}[/]")
     else:
         console.print("[yellow]No running session to turn on; start one with reggie.py <screen>[/]")
 

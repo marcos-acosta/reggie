@@ -10,6 +10,10 @@ SHAPE = (SIZE, SIZE, 3)
 Pixels = np.ndarray
 
 
+class DisplayUnreachable(Exception):
+    pass
+
+
 def fit(img: Image.Image) -> Image.Image:
     return ImageOps.fit(img.convert("RGB"), (SIZE, SIZE), Image.LANCZOS)
 

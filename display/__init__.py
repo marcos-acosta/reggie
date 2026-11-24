@@ -2,9 +2,9 @@ import os
 
 from config import display_config
 
-from .base import SIZE, Display
+from .base import SIZE, Display, DisplayUnreachable
 
-__all__ = ["DISPLAY_KINDS", "SIZE", "Display", "default_kind", "open_display"]
+__all__ = ["DISPLAY_KINDS", "SIZE", "Display", "DisplayUnreachable", "default_kind", "open_display"]
 
 DISPLAY_KINDS = ("matrix", "sim")
 
